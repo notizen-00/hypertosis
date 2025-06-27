@@ -27,9 +27,14 @@
         <button @click="resetFilter" class="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200">
           🔄 Reset
         </button>
-         <a href="/predict" class="bg-blue-500 border text-white px-4 py-2 rounded hover:bg-blue-800">
-          <i class="fas fa-search"></i> Predict
-        </a>
+       <router-link
+  to="/predict"
+  class="bg-blue-500 border text-white px-4 py-2 rounded hover:bg-blue-800 inline-flex items-center gap-2"
+>
+  <i class="fas fa-search"></i>
+  Predict
+</router-link>
+
       </div>
 
       <!-- Table -->
