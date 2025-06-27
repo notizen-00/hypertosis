@@ -1,13 +1,12 @@
 <template>
   <header class="bg-sky-300 flex justify-between items-center px-4 py-2 shadow relative">
     <div class="flex items-center space-x-2">
-      <a href="/">
+      <router-link to="/">
         <img src="/src/assets/logo.png" alt="Logo" class="h-12" />
-      </a>
+      </router-link>
     </div>
 
     <div class="relative">
-      <!-- Bungkus avatar dan username dalam flex agar sejajar -->
       <div
         class="flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown"
@@ -20,7 +19,6 @@
         </span>
       </div>
 
-      <!-- Dropdown -->
       <div
         v-if="showDropdown"
         class="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg z-50"
@@ -32,7 +30,7 @@
           >
             Profile
           </li>
-           <li
+          <li
             @click="goToHistory"
             class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
           >
@@ -50,11 +48,12 @@
   </header>
 </template>
 
-
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 
+const router = useRouter()
 const showDropdown = ref(false)
 const user = ref(null)
 const profile = ref(null)
@@ -87,18 +86,14 @@ onMounted(async () => {
 
 const logout = async () => {
   await supabase.auth.signOut()
-  window.location.reload()
+  router.push('/login')
 }
 
 const goToProfile = () => {
-  window.location.href = '/profile'
+  router.push('/profile')
 }
 
 const goToHistory = () => {
-  window.location.href = '/history'
+  router.push('/history')
 }
 </script>
-
-<style scoped>
-/* Optional dropdown style */
-</style>
