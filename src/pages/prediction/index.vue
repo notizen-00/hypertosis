@@ -37,10 +37,18 @@
             <img v-else :src="resultImage" alt="Segmented" class="object-contain h-full" />
           </div>
 
-          <div class="mt-4 flex flex-col gap-2 w-full items-center">
-            <button @click="predict" class="btn">🧠 PREDICT</button>
-            <button @click="saveToHistory(user)" class="btn">💾 SAVE TO HISTORY</button>
-          </div>
+        <div class="mt-4 flex flex-col gap-2 w-full items-center">
+  <button v-if="!isLoading" @click="predict" class="btn">🧠 PREDICT</button>
+  <div v-else class="text-sm text-gray-500 flex items-center gap-2">
+    <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    Memproses prediksi...
+  </div>
+  <button @click="saveToHistory(user)" class="btn">💾 SAVE TO HISTORY</button>
+</div>
+
         </div>
       </div>
 
@@ -61,6 +69,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { supabase } from '@/lib/supabase' 
 import { useRouter } from 'vue-router' 
 const router = useRouter()
+const isLoading = ref(false)
+
 
 const inputImage = ref(null)
 const resultImage = ref(null)
@@ -89,46 +99,44 @@ function resetImage() {
   resultImage.value = null
 }
 
-function predict() {
-  if (!inputImage.value) return
-
-  const predictions = [
-    'Hyperostosis',
-    'Meningioma',
-    'Normal',
-    'Kalsifikasi',
-    'Lesi Tulang'
-  ]
-  const randomResult = predictions[Math.floor(Math.random() * predictions.length)]
-  hasil.value = randomResult;
-  const img = new Image()
-  img.crossOrigin = 'anonymous'
-
-  img.onload = () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = img.width
-    canvas.height = img.height
-
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(img, 0, 0)
-
-    const text = `Hasil Prediksi: ${randomResult}`
-    const padding = 20
-
-    ctx.font = 'bold 24px Arial'
-    const textWidth = ctx.measureText(text).width
-    const textHeight = 32
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-    ctx.fillRect(10, 10, textWidth + padding, textHeight + 10)
-
-    ctx.fillStyle = 'white'
-    ctx.fillText(text, 15, 36)
-
-    resultImage.value = canvas.toDataURL('image/png')
+async function predict() {
+  if (!fileInput.value.files.length) {
+    alert('Silakan pilih gambar terlebih dahulu.')
+    return
   }
 
-  img.src = inputImage.value
+  const file = fileInput.value.files[0]
+  const formData = new FormData()
+  formData.append('file', file)
+
+  isLoading.value = true
+
+  try {
+    const response = await fetch('https://a413b00b96ff.ngrok-free.app/predict', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    hasil.value = result?.hasil?.[0] || 'Tidak diketahui'
+
+    if (result.result_image) {
+      resultImage.value = `data:image/png;base64,${result.result_image}`
+    } else {
+      alert('Gambar hasil tidak tersedia dari server.')
+      resultImage.value = null
+    }
+  } catch (error) {
+    console.error('Error during prediction:', error)
+    alert('Gagal melakukan prediksi!')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 

@@ -67,7 +67,7 @@
 />
 
               </td>
-              <td class="border px-4 py-2 text-center">{{ item.hasil }}</td>
+              <td class="border px-4 py-2 text-center">{{ item.hasil == 'Hypertosis' || item.hasil == 'Meningioma' ? 'Hypertosis' :'Tanpa Hypertosis' }}</td>
               <td class="border px-4 py-2 text-center">{{ item.keterangan }}</td>
               <td class="border px-4 py-2 text-center">
                 <button
