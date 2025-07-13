@@ -37,18 +37,17 @@
             <img v-else :src="resultImage" alt="Segmented" class="object-contain h-full" />
           </div>
 
-        <div class="mt-4 flex flex-col gap-2 w-full items-center">
-  <button v-if="!isLoading" @click="predict" class="btn">🧠 PREDICT</button>
-  <div v-else class="text-sm text-gray-500 flex items-center gap-2">
-    <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-    </svg>
-    Memproses prediksi...
-  </div>
-  <button @click="saveToHistory(user)" class="btn">💾 SAVE TO HISTORY</button>
-</div>
-
+          <div class="mt-4 flex flex-col gap-2 w-full items-center">
+            <button v-if="!isLoading" @click="predict" class="btn">🧠 PREDICT</button>
+            <div v-else class="text-sm text-gray-500 flex items-center gap-2">
+              <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              Memproses prediksi...
+            </div>
+            <button @click="saveToHistory(user)" class="btn">💾 SAVE TO HISTORY</button>
+          </div>
         </div>
       </div>
 
@@ -64,177 +63,183 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import MainLayout from '@/layouts/main.vue'
-import { v4 as uuidv4 } from 'uuid'
-import { supabase } from '@/lib/supabase' 
-import { useRouter } from 'vue-router' 
-const router = useRouter()
-const isLoading = ref(false)
+import MainLayout from '@/layouts/main.vue';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
+const isLoading = ref(false);
 
-const inputImage = ref(null)
-const resultImage = ref(null)
-const fileInput = ref(null)
-const user = ref(null)
-const hasil = ref(null)
-onMounted(async()=>  {
-  const { data } = await supabase.auth.getUser()
-  user.value = data.user
-  console.log(user.value.id)
-})
+const inputImage = ref(null);
+const inputImageBase64 = ref(null);
+const resultImage = ref(null);
+const fileInput = ref(null);
+const user = ref(null);
+const hasil = ref(null);
+
+onMounted(async () => {
+  const { data } = await supabase.auth.getUser();
+  user.value = data.user;
+  console.log(user.value?.id);
+});
+
 function openImage() {
-  fileInput.value.click()
+  fileInput.value.click();
 }
 
 function onFileChange(event) {
-  const file = event.target.files[0]
+  const file = event.target.files[0];
   if (file) {
-    inputImage.value = URL.createObjectURL(file)
-    resultImage.value = null
+    inputImage.value = URL.createObjectURL(file);
+    resultImage.value = null;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      inputImageBase64.value = reader.result;
+    };
+    reader.readAsDataURL(file);
   }
 }
 
 function resetImage() {
-  inputImage.value = null
-  resultImage.value = null
+  inputImage.value = null;
+  resultImage.value = null;
+  inputImageBase64.value = null;
 }
 
 async function predict() {
   if (!fileInput.value.files.length) {
-    alert('Silakan pilih gambar terlebih dahulu.')
-    return
+    alert('Silakan pilih gambar terlebih dahulu.');
+    return;
   }
 
-  const file = fileInput.value.files[0]
-  const formData = new FormData()
-  formData.append('file', file)
+  const file = fileInput.value.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
 
-  isLoading.value = true
+  isLoading.value = true;
 
   try {
     const response = await fetch('https://a413b00b96ff.ngrok-free.app/predict', {
       method: 'POST',
       body: formData,
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json()
+    const result = await response.json();
 
-    hasil.value = result?.hasil?.[0] || 'Tidak diketahui'
+    hasil.value = result?.hasil?.[0] || 'Tidak diketahui';
 
     if (result.result_image) {
-      resultImage.value = `data:image/png;base64,${result.result_image}`
+      resultImage.value = `data:image/png;base64,${result.result_image}`;
     } else {
-      alert('Gambar hasil tidak tersedia dari server.')
-      resultImage.value = null
+      alert('Gambar hasil tidak tersedia dari server.');
+      resultImage.value = null;
     }
   } catch (error) {
-    console.error('Error during prediction:', error)
-    alert('Gagal melakukan prediksi!')
+    console.error('Error during prediction:', error);
+    alert('Gagal melakukan prediksi!');
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 
-
 function base64ToBlob(base64Data) {
-  const parts = base64Data.split(',')
-  const mime = parts[0].match(/:(.*?);/)[1]
-  const binary = atob(parts[1])
-  const array = []
+  const parts = base64Data.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const binary = atob(parts[1]);
+  const array = [];
   for (let i = 0; i < binary.length; i++) {
-    array.push(binary.charCodeAt(i))
+    array.push(binary.charCodeAt(i));
   }
-  return new Blob([new Uint8Array(array)], { type: mime })
+  return new Blob([new Uint8Array(array)], { type: mime });
 }
 
 async function uploadImageToSupabase(base64Image, user) {
   if (!base64Image || !base64Image.startsWith('data:image/')) {
-    alert('Base64 gambar tidak valid!')
-    return null
+    alert('Base64 gambar tidak valid!');
+    return null;
   }
 
   if (!user?.id) {
-    alert('User tidak valid atau belum login')
-    return null
+    alert('User tidak valid atau belum login');
+    return null;
   }
 
-  const mimeMatch = base64Image.match(/^data:(image\/[a-zA-Z]+);base64,/)
+  const mimeMatch = base64Image.match(/^data:(image\/[^;]+);base64,/);
   if (!mimeMatch) {
-    alert('Format base64 tidak dikenali')
-    return null
+    alert('Format base64 tidak dikenali');
+    return null;
   }
 
-  const mimeType = mimeMatch[1]                    
-  const extension = mimeType.split('/')[1]          
-  const blob = base64ToBlob(base64Image)
-
-  const fileName = `${user.id}/${uuidv4()}.${extension}`
-
-  console.log('Uploading:', fileName, 'size:', blob.size, 'type:', mimeType)
+  const mimeType = mimeMatch[1];
+  const extension = mimeType.split('/')[1];
+  const blob = base64ToBlob(base64Image);
+  const fileName = `${user.id}/${uuidv4()}.${extension}`;
 
   const { data, error } = await supabase.storage
-    .from('mri-images') 
+    .from('mri-images')
     .upload(fileName, blob, {
       contentType: mimeType,
-      upsert: false
-    })
+      upsert: false,
+    });
 
   if (error) {
-    console.error('Upload error:', error.message)
-    alert('Gagal upload ke storage: ' + error.message)
-    return null
+    console.error('Upload error:', error.message);
+    alert('Gagal upload ke storage: ' + error.message);
+    return null;
   }
 
   const { publicUrl } = supabase.storage
     .from('mri-images')
-    .getPublicUrl(fileName).data
+    .getPublicUrl(fileName).data;
 
-  return publicUrl
+  return publicUrl;
 }
 
-
-
 async function saveToHistory(user) {
-  if (!resultImage.value) {
-    alert('Tidak ada gambar yang diprediksi!')
-    return
+  if (!resultImage.value || !inputImageBase64.value) {
+    alert('Tidak ada gambar hasil atau gambar input!');
+    return;
   }
 
   try {
-    const imageUrl = await uploadImageToSupabase(resultImage.value,user)
+    const imageUrl = await uploadImageToSupabase(resultImage.value, user);
+    const oriUrl = await uploadImageToSupabase(inputImageBase64.value, user);
+
     const { error } = await supabase.from('mri_history').insert([
       {
         tanggal: new Date().toISOString().split('T')[0],
         mri_image: imageUrl,
+        mri_ori: oriUrl,
         hasil: hasil.value,
         keterangan: 'Sesuai model prediksi',
         user_id: (await supabase.auth.getUser()).data?.user?.id ?? null,
       },
-    ])
+    ]);
 
     if (error) {
-      console.error('Gagal simpan:', error)
-      alert('Gagal menyimpan data ke history!')
+      console.error('Gagal simpan:', error);
+      alert('Gagal menyimpan data ke history!');
     } else {
-      alert('Data berhasil disimpan ke history.')
-      router.push('/history')
+      alert('Data berhasil disimpan ke history.');
+      router.push('/history');
     }
   } catch (e) {
-    console.error(e)
-    alert('Terjadi kesalahan saat upload!')
+    console.error(e);
+    alert('Terjadi kesalahan saat upload!');
   }
 }
 
 function saveToPC() {
-  if (!resultImage.value) return
-  const link = document.createElement('a')
-  link.href = resultImage.value
-  link.download = 'predict_result.png'
-  link.click()
+  if (!resultImage.value) return;
+  const link = document.createElement('a');
+  link.href = resultImage.value;
+  link.download = 'predict_result.png';
+  link.click();
 }
 </script>
-

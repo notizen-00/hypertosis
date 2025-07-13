@@ -60,15 +60,20 @@
               <td class="border px-4 py-2 text-center">{{ item.tanggal }}</td>
               <td class="border px-4 py-2 text-center">
                <img
-  :src="item.mri_image"
-  @click="openModal(item.mri_image)"
+  :src="item.mri_ori"
+  @click="openModal(item.mri_ori)"
   alt="MRI"
   class="w-24 h-24 object-contain mx-auto cursor-pointer hover:scale-105 transition"
 />
 
               </td>
-              <td class="border px-4 py-2 text-center">{{ item.hasil == 'Hypertosis' || item.hasil == 'Meningioma' ? 'Hypertosis' :'Tanpa Hypertosis' }}</td>
-              <td class="border px-4 py-2 text-center">{{ item.keterangan }}</td>
+              <td class="border px-4 py-2 text-center">      <img
+  :src="item.mri_image"
+  @click="openModal(item.mri_image)"
+  alt="MRI"
+  class="w-24 h-24 object-contain mx-auto cursor-pointer hover:scale-105 transition"
+/></td>
+              <td class="border px-4 py-2 text-center">{{ item.hasil == 'Hypertosis' || item.hasil == 'Meningioma' ? 'Hypertosis':'Tanpa Hypertosis' }}</td>
               <td class="border px-4 py-2 text-center">
                 <button
                   @click="deleteItem(item.id)"
