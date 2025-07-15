@@ -121,7 +121,7 @@ async function predict() {
   isLoading.value = true;
 
   try {
-    const response = await fetch('https://a413b00b96ff.ngrok-free.app/predict', {
+    const response = await fetch('https://ba880b4bb683.ngrok-free.app/predict', {
       method: 'POST',
       body: formData,
     });
